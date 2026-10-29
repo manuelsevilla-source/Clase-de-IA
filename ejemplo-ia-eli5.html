@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Cómo piensa un Modelo de IA? — Explicación Didáctica y Visual</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --primary: #4F46E5;
+      --primary-light: #EEF2FF;
+      --accent: #F59E0B;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --success: #10B981;
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin: 30px 0;
+      background: linear-gradient(135deg, #6EE7B7, #3B82F6, #9333EA);
+      color: white;
+      padding: 35px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.95;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 28px;
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border: 2px solid #E2E8F0;
+    }
+
+    .card h2 {
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Tooltip / Term */
+    .term {
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 2px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      font-weight: bold;
+      border-bottom: 2px dashed #D97706;
+    }
+
+    .term:hover::after {
+      content: attr(data-gloss);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1E293B;
+      color: #FFFFFF;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* SVG Containers */
+    .illustration {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Interactive Simulator */
+    .lab-box {
+      background: var(--primary-light);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .lego-pieces {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .lego-btn {
+      background: #EF4444;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 0 #B91C1C;
+      transition: all 0.1s ease;
+    }
+
+    .lego-btn:nth-child(2) { background: #3B82F6; box-shadow: 0 4px 0 #1D4ED8; }
+    .lego-btn:nth-child(3) { background: #10B981; box-shadow: 0 4px 0 #047857; }
+    .lego-btn:nth-child(4) { background: #F59E0B; box-shadow: 0 4px 0 #B45309; }
+
+    .lego-btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .result-sentence {
+      font-size: 1.2rem;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #CBD5E1;
+      margin-top: 10px;
+    }
+
+    /* Quiz */
+    .quiz-option {
+      background: #F1F5F9;
+      border: 2px solid #CBD5E1;
+      padding: 12px 18px;
+      border-radius: 12px;
+      margin: 8px 0;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      text-align: left;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:hover {
+      background: #E2E8F0;
+    }
+
+    .quiz-feedback {
+      margin-top: 12px;
+      font-weight: bold;
+      min-height: 24px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🤖 ¿Cómo Piensa un Robot de IA?</h1>
+      <p class="subtitle">Una explicación clara, visual e intuitiva</p>
+    </header>
+
+    <!-- Paso 1 -->
+    <div class="card">
+      <h2>🧩 1. Las Palabras son Fichas de LEGO</h2>
+      <p>
+        Un robot no lee libros con ojos como tú y yo. Para él, las palabras son pequeñas piezas de colores llamadas 
+        <span class="term" data-gloss="Trozos diminutos de palabras que la IA procesa">tokens</span>.
+      </p>
+
+      <div class="illustration">
+        <svg width="400" height="120" viewBox="0 0 400 120">
+          <!-- Lego 1 -->
+          <rect x="20" y="40" width="80" height="50" rx="8" fill="#EF4444" />
+          <circle cx="40" cy="35" r="7" fill="#B91C1C" />
+          <circle cx="80" cy="35" r="7" fill="#B91C1C" />
+          <text x="60" y="70" fill="white" font-weight="bold" font-size="16" text-anchor="middle">El</text>
+
+          <!-- Lego 2 -->
+          <rect x="110" y="40" width="100" height="50" rx="8" fill="#3B82F6" />
+          <circle cx="135" cy="35" r="7" fill="#1D4ED8" />
+          <circle cx="185" cy="35" r="7" fill="#1D4ED8" />
+          <text x="160" y="70" fill="white" font-weight="bold" font-size="16" text-anchor="middle">gatito</text>
+
+          <!-- Lego 3 -->
+          <rect x="220" y="40" width="80" height="50" rx="8" fill="#10B981" />
+          <circle cx="240" cy="35" r="7" fill="#047857" />
+          <circle cx="280" cy="35" r="7" fill="#047857" />
+          <text x="260" y="70" fill="white" font-weight="bold" font-size="16" text-anchor="middle">come</text>
+
+          <!-- Lego 4 -->
+          <rect x="310" y="40" width="80" height="50" rx="8" fill="#F59E0B" />
+          <circle cx="330" cy="35" r="7" fill="#B45309" />
+          <circle cx="370" cy="35" r="7" fill="#B45309" />
+          <text x="350" y="70" fill="white" font-weight="bold" font-size="16" text-anchor="middle">pescado</text>
+        </svg>
+      </div>
+
+      <p>
+        Cuando tú le hablas al robot, él desarma tu frase en fichas de LEGO, las mira y adivina cuál es la ficha que debería venir después.
+      </p>
+    </div>
+
+    <!-- Paso 2: Interactivo -->
+    <div class="card">
+      <h2>🎮 Laboratorio: ¡Ayuda al Robot a Completar el Cuento!</h2>
+      <p>Toca una pieza de LEGO para que el robot construya su pensamiento:</p>
+
+      <div class="lab-box">
+        <div class="lego-pieces">
+          <button class="lego-btn" onclick="addWord('El perro ')">🐶 El perro</button>
+          <button class="lego-btn" onclick="addWord('juega con ')">⚽ juega con</button>
+          <button class="lego-btn" onclick="addWord('su pelota ')">🎾 su pelota</button>
+          <button class="lego-btn" onclick="addWord('feliz! ✨')">🌟 feliz!</button>
+        </div>
+        <div class="result-sentence" id="sentenceOutput">
+          (Pulsa las piezas de arriba para armar la frase)
+        </div>
+        <button style="margin-top:12px; background:none; border:none; color:#64748B; text-decoration:underline; cursor:pointer;" onclick="resetSentence()">Reiniciar piezas</button>
+      </div>
+    </div>
+
+    <!-- Paso 3: Atención -->
+    <div class="card">
+      <h2>🔦 2. La Linterna Mágica (Atención)</h2>
+      <p>
+        ¿Cómo hace el robot para no perderse en historias largas? Usa un truco llamado 
+        <span class="term" data-gloss="Mecanismo de Atención: enfoca sólo lo importante">Atención</span>.
+      </p>
+      <p>
+        Es como tener una <strong>linterna mágica</strong> en un cuarto oscuro. Si el cuento dice: 
+        <em>"El niño fue a la cocina porque tenía hambre y comió una..."</em>, la linterna alumbra la palabra 
+        <strong>"hambre"</strong> y <strong>"cocina"</strong> para saber que la respuesta es <strong>"manzana"</strong> y no "bicicleta".
+      </p>
+    </div>
+
+    <!-- Mini Quiz -->
+    <div class="card">
+      <h2>⭐ Mini Quiz de Repaso</h2>
+      <p><strong>Pregunta:</strong> ¿Qué utiliza el modelo para procesar y predecir las palabras?</p>
+      
+      <button class="quiz-option" onclick="checkAnswer(false)">❌ Una varita mágica de hadas</button>
+      <button class="quiz-option" onclick="checkAnswer(true)">✅ Fichas de LEGO (tokens) y una linterna de atención</button>
+      <button class="quiz-option" onclick="checkAnswer(false)">❌ Un montón de piedras del jardín</button>
+
+      <div class="quiz-feedback" id="quizFeedback"></div>
+    </div>
+
+    <footer>
+      Hecho con ❤️ para explicar Inteligencia Artificial de forma fácil y divertida.
+    </footer>
+  </div>
+
+  <script>
+    let currentText = "";
+
+    function addWord(word) {
+      currentText += word;
+      document.getElementById('sentenceOutput').innerText = currentText;
+    }
+
+    function resetSentence() {
+      currentText = "";
+      document.getElementById('sentenceOutput').innerText = "(Pulsa las piezas de arriba para armar la frase)";
+    }
+
+    function checkAnswer(isCorrect) {
+      const fb = document.getElementById('quizFeedback');
+      if (isCorrect) {
+        fb.innerHTML = "<span style='color: #10B981;'>🎉 ¡Bravoooo! ¡Eres un súper genio de la robótica! ⭐⭐⭐</span>";
+      } else {
+        fb.innerHTML = "<span style='color: #EF4444;'>😅 Casi casi... ¡Acuérdate de las piezas de LEGO! Inténtalo otra vez.</span>";
+      }
+    }
+  </script>
+</body>
+</html>
+

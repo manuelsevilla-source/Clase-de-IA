@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Gran Parque de los Robots: CLI, API y MCP explicados fácil</title>
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --cli-color: #0F172A;
+      --cli-accent: #22C55E;
+      --api-color: #2563EB;
+      --api-light: #EFF6FF;
+      --mcp-color: #8B5CF6;
+      --mcp-light: #F5F3FF;
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 860px;
+      width: 100%;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4);
+      background-size: 300% 300%;
+      animation: gradientFlow 10s ease infinite;
+      color: white;
+      padding: 40px 24px;
+      border-radius: var(--radius);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      max-width: 650px;
+      margin: 0 auto;
+      opacity: 0.95;
+    }
+
+    /* NAVIGATION PILLS */
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: white;
+      border: 3px solid #E2E8F0;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 1.05rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    }
+
+    .tab-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    }
+
+    .tab-btn.active {
+      border-color: #3B82F6;
+      background: #EFF6FF;
+      color: #1D4ED8;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      margin-bottom: 30px;
+      border: 3px solid #E2E8F0;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    .card-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .badge-cli { background: #E2E8F0; color: #0F172A; }
+    .badge-api { background: #DBEAFE; color: #1D4ED8; }
+    .badge-mcp { background: #EDE9FE; color: #6D28D9; }
+
+    .card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* TOOLTIP GLOSSARY */
+    .term {
+      background: #FEF08A;
+      color: #854D0E;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      border-bottom: 2px dashed #CA8A04;
+    }
+
+    .term:hover::after {
+      content: attr(data-gloss);
+      position: absolute;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: normal;
+      white-space: normal;
+      width: 240px;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* SVG ART */
+    .svg-scene {
+      display: flex;
+      justify-content: center;
+      margin: 24px 0;
+      background: #F8FAFC;
+      border-radius: 16px;
+      padding: 16px;
+      border: 2px dashed #CBD5E1;
+    }
+
+    /* INTERACTIVE SIMULATORS */
+    .simulator-box {
+      background: #F8FAFC;
+      border: 2px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .sim-header {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* CLI Terminal Simulator */
+    .terminal {
+      background: #0F172A;
+      color: #22C55E;
+      font-family: 'Courier New', monospace;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .terminal-output {
+      min-height: 70px;
+      white-space: pre-line;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .terminal-input-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .cli-btn {
+      background: #1E293B;
+      color: #F8FAFC;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: monospace;
+      transition: all 0.15s;
+    }
+
+    .cli-btn:hover {
+      background: #334155;
+      border-color: #22C55E;
+      color: #22C55E;
+    }
+
+    /* API Waiter Simulator */
+    .api-kitchen {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .menu-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .menu-btn {
+      background: white;
+      border: 2px solid #93C5FD;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.95rem;
+      color: #1E40AF;
+      box-shadow: 0 3px 0 #93C5FD;
+      transition: all 0.1s;
+    }
+
+    .menu-btn:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+
+    .waiter-status {
+      background: var(--api-light);
+      border: 2px dashed #3B82F6;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1rem;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* MCP Universal Adapter Simulator */
+    .mcp-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .tool-slots {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tool-btn {
+      background: white;
+      border: 2px solid #C4B5FD;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #6D28D9;
+      box-shadow: 0 3px 0 #C4B5FD;
+      transition: all 0.1s;
+    }
+
+    .tool-btn:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+
+    .robot-backpack {
+      width: 100%;
+      background: var(--mcp-light);
+      border: 2px dashed #8B5CF6;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      font-size: 1.05rem;
+    }
+
+    /* COMPARISON TABLE */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .comparison-table th, .comparison-table td {
+      padding: 14px 16px;
+      text-align: left;
+    }
+
+    .comparison-table th {
+      background: #E2E8F0;
+      color: #0F172A;
+      font-size: 1rem;
+    }
+
+    .comparison-table tr:nth-child(even) {
+      background: #F8FAFC;
+    }
+
+    /* MINI QUIZ */
+    .quiz-card {
+      background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%);
+      border: 3px solid #FCD34D;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .q-btn {
+      background: white;
+      border: 2px solid #FBBF24;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-align: left;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .q-btn:hover {
+      background: #FEF9C3;
+      transform: scale(1.01);
+    }
+
+    .quiz-feedback {
+      margin-top: 14px;
+      font-weight: bold;
+      min-height: 28px;
+      font-size: 1.1rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <h1>🏰 El Gran Parque de los Robots</h1>
+      <p class="subtitle">
+        ¿Cómo se comunican las personas, las computadoras y la Inteligencia Artificial? 
+        Aprende qué son una <strong>CLI</strong>, una <strong>API</strong> y un <strong>MCP</strong> de forma clara, visual y sencilla.
+      </p>
+    </header>
+
+    <!-- NAVEGACIÓN RÁPIDA -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="scrollToId('sec-cli')">⌨️ 1. CLI (Walkie-Talkie)</button>
+      <button class="tab-btn" onclick="scrollToId('sec-api')">🍽️ 2. API (El Camarero)</button>
+      <button class="tab-btn" onclick="scrollToId('sec-mcp')">🔌 3. MCP (El Enchufe Mágico)</button>
+      <button class="tab-btn" onclick="scrollToId('sec-summary')">📊 Cuadro Resumen</button>
+      <button class="tab-btn" onclick="scrollToId('sec-quiz')">⭐ Gran Quiz</button>
+    </div>
+
+    <!-- SECCIÓN 1: CLI -->
+    <div class="card" id="sec-cli">
+      <span class="card-badge badge-cli">Para Humanos y Máquinas</span>
+      <h2>⌨️ 1. ¿Qué es una CLI? — <em>El Walkie-Talkie de Palabras Mágicas</em></h2>
+      
+      <p>
+        <strong>CLI</strong> significa <span class="term" data-gloss="Command Line Interface: una pantalla negra donde escribes órdenes en texto">Interfaz de Línea de Comandos</span>.
+      </p>
+      
+      <p style="margin-top: 10px;">
+        💡 <strong>La analogía cotidiana:</strong> Imagina que tienes un <strong>walkie-talkie directo</strong> para hablar con tu robot. 
+        En vez de tocar dibujitos con el ratón o con la pantalla táctil, le hablas escribiendo órdenes exactas: 
+        <em>"¡Robot, salta!"</em> o <em>"¡Robot, guarda mi archivo!"</em>. 
+        El robot no necesita botones ni ventanas gráficas, solo lee el comando de texto y lo ejecuta al instante.
+      </p>
+
+      <!-- SVG CLI -->
+      <div class="svg-scene">
+        <svg width="600" height="150" viewBox="0 0 600 150">
+          <!-- Niño tecleando -->
+          <circle cx="80" cy="60" r="30" fill="#FBBF24" />
+          <circle cx="72" cy="55" r="4" fill="#1E293B" />
+          <circle cx="88" cy="55" r="4" fill="#1E293B" />
+          <path d="M 72 70 Q 80 80 88 70" stroke="#1E293B" stroke-width="3" fill="none" />
+          <rect x="50" y="95" width="60" height="40" rx="10" fill="#3B82F6" />
+          <text x="80" y="145" text-anchor="middle" font-size="12" fill="#64748B" font-weight="bold">Tú (Humano)</text>
+
+          <!-- Flecha de texto -->
+          <path d="M 150 75 L 260 75" stroke="#0F172A" stroke-width="4" stroke-dasharray="6,4" />
+          <polygon points="265,75 255,70 255,80" fill="#0F172A" />
+          <rect x="160" y="48" width="90" height="24" rx="6" fill="#0F172A" />
+          <text x="205" y="64" fill="#22C55E" font-size="11" font-family="monospace" text-anchor="middle">$ agy run</text>
+
+          <!-- Pantalla Negra / Terminal -->
+          <rect x="290" y="25" width="160" height="100" rx="10" fill="#0F172A" stroke="#334155" stroke-width="3" />
+          <circle cx="305" cy="38" r="4" fill="#EF4444" />
+          <circle cx="318" cy="38" r="4" fill="#F59E0B" />
+          <circle cx="331" cy="38" r="4" fill="#10B981" />
+          <text x="305" y="65" fill="#22C55E" font-size="11" font-family="monospace">&gt; Orden lista</text>
+          <text x="305" y="85" fill="#38BDF8" font-size="11" font-family="monospace">&gt; ¡Misión lista!</text>
+          <text x="370" y="140" text-anchor="middle" font-size="12" fill="#64748B" font-weight="bold">Terminal CLI</text>
+
+          <!-- Robot ejecutando -->
+          <rect x="490" y="40" width="70" height="60" rx="12" fill="#94A3B8" />
+          <rect x="505" y="52" width="12" height="12" rx="3" fill="#38BDF8" />
+          <rect x="533" y="52" width="12" height="12" rx="3" fill="#38BDF8" />
+          <circle cx="525" cy="28" r="6" fill="#EF4444" />
+          <line x1="525" y1="28" x2="525" y2="40" stroke="#64748B" stroke-width="3" />
+          <text x="525" y="125" text-anchor="middle" font-size="12" fill="#64748B" font-weight="bold">Robot</text>
+        </svg>
+      </div>
+
+      <!-- Simulador CLI -->
+      <div class="simulator-box">
+        <div class="sim-header">
+          <span>🎮 Laboratorio CLI: ¡Manda una orden con el teclado!</span>
+        </div>
+        <p style="font-size: 0.95rem; margin-bottom: 10px;">Haz clic en un comando para transmitírselo a la terminal:</p>
+        
+        <div class="terminal">
+          <div class="terminal-output" id="cliOutput">
+$ esperando_orden...
+Pulsa un botón abajo para enviar un comando al robot.
+          </div>
+        </div>
+
+        <div class="terminal-input-bar">
+          <button class="cli-btn" onclick="runCliCmd('crear_galleta')">$ robot --hacer-galleta</button>
+          <button class="cli-btn" onclick="runCliCmd('bailar')">$ robot --bailar-trompo</button>
+          <button class="cli-btn" onclick="runCliCmd('dormir')">$ robot --modo-siesta</button>
+          <button class="cli-btn" style="color:#F87171" onclick="clearCli()">$ clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: API -->
+    <div class="card" id="sec-api">
+      <span class="card-badge badge-api">Entre Programas</span>
+      <h2>🍽️ 2. ¿Qué es una API? — <em>El Amable Camarero del Restaurante</em></h2>
+      
+      <p>
+        <strong>API</strong> significa <span class="term" data-gloss="Application Programming Interface: mensajero que conecta dos aplicaciones distintas">Interfaz de Programación de Aplicaciones</span>.
+      </p>
+
+      <p style="margin-top: 10px;">
+        💡 <strong>La analogía cotidiana:</strong> Imagina que estás sentado en un restaurante 🍕. 
+        Tú no puedes entrar a la cocina llena de hornos calientes a preparar la masa directamente. 
+        ¿Quién te ayuda? <strong>¡El camarero!</strong> 
+        Tú le pides: <em>"Quiero pizza de queso"</em>. El camarero lleva el pedido a la cocina, los cocineros preparan la pizza y el camarero te la trae servida a la mesa. 
+        <strong>La API es ese camarero:</strong> un mensajero formal que lleva peticiones y regresa con las respuestas entre dos programas.
+      </p>
+
+      <!-- SVG API -->
+      <div class="svg-scene">
+        <svg width="600" height="150" viewBox="0 0 600 150">
+          <!-- Tu app / cliente -->
+          <rect x="40" y="35" width="110" height="75" rx="14" fill="#DBEAFE" stroke="#3B82F6" stroke-width="3" />
+          <text x="95" y="72" text-anchor="middle" font-weight="bold" fill="#1D4ED8" font-size="14">📱 Tu Móvil</text>
+          <text x="95" y="92" text-anchor="middle" fill="#64748B" font-size="11">(El Cliente)</text>
+
+          <!-- Camarero (API) -->
+          <g transform="translate(260, 25)">
+            <circle cx="40" cy="25" r="20" fill="#FED7AA" />
+            <path d="M 20 60 L 60 60 L 50 100 L 30 100 Z" fill="#2563EB" />
+            <circle cx="34" cy="22" r="3" fill="#1E293B" />
+            <circle cx="46" cy="22" r="3" fill="#1E293B" />
+            <rect x="55" y="45" width="28" height="12" rx="4" fill="#F8FAFC" stroke="#64748B" />
+            <text x="40" y="115" text-anchor="middle" font-weight="bold" fill="#2563EB" font-size="12">🤵 API (Camarero)</text>
+          </g>
+
+          <!-- Flechas API -->
+          <path d="M 155 60 L 250 60" stroke="#3B82F6" stroke-width="3" marker-end="url(#arrow)" />
+          <text x="200" y="52" text-anchor="middle" font-size="10" fill="#3B82F6" font-weight="bold">Petición 📝</text>
+
+          <path d="M 350 80 L 440 80" stroke="#10B981" stroke-width="3" />
+          <text x="395" y="74" text-anchor="middle" font-size="10" fill="#10B981" font-weight="bold">Respuesta 🍕</text>
+
+          <!-- Servidor Cocina -->
+          <rect x="450" y="35" width="110" height="75" rx="14" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3" />
+          <text x="505" y="72" text-anchor="middle" font-weight="bold" fill="#B45309" font-size="14">🍳 Servidor</text>
+          <text x="505" y="92" text-anchor="middle" fill="#64748B" font-size="11">(La Cocina)</text>
+        </svg>
+      </div>
+
+      <!-- Simulador API -->
+      <div class="simulator-box">
+        <div class="sim-header">
+          <span>🍕 Laboratorio API: ¡Haz un pedido al camarero!</span>
+        </div>
+        <p style="font-size: 0.95rem; margin-bottom: 12px;">Selecciona qué quieres consultar al servidor mediante la API:</p>
+
+        <div class="menu-options">
+          <button class="menu-btn" onclick="callApi('clima')">☀️ ¿Qué tiempo hace hoy?</button>
+          <button class="menu-btn" onclick="callApi('fotos')">🐶 Pide fotos de cachorros</button>
+          <button class="menu-btn" onclick="callApi('mapa')">🗺️ ¿Dónde está el museo?</button>
+        </div>
+
+        <div class="waiter-status" id="apiStatus" style="margin-top: 14px;">
+          (El camarero está atento esperando tu pedido...)
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: MCP -->
+    <div class="card" id="sec-mcp">
+      <span class="card-badge badge-mcp">Para Inteligencia Artificial</span>
+      <h2>🔌 3. ¿Qué es un MCP? — <em>El Enchufe Universal de la Mochila del Robot</em></h2>
+      
+      <p>
+        <strong>MCP</strong> significa <span class="term" data-gloss="Model Context Protocol: estándar abierto creado por Anthropic para conectar IA con herramientas y datos">Model Context Protocol (Protocolo de Contexto de Modelo)</span>.
+      </p>
+
+      <p style="margin-top: 10px;">
+        💡 <strong>La analogía cotidiana:</strong> Imagina que tienes un <strong>asistente virtual superinteligente (la IA)</strong> 🧠. 
+        El asistente razona muy bien, pero por sí solo no tiene manos para abrir tus carpetas, ni puede ver tus notas, ni consultar bases de datos en tu ordenador.
+      </p>
+      
+      <p style="margin-top: 10px;">
+        Antes, para que la IA pudiera usar una herramienta externa, los desarrolladores tenían que crear adaptadores a medida para cada servicio con código complejo. 
+        <strong>¡Con MCP todo se estandarizó!</strong> MCP es como ponerle un <strong>puerto USB universal</strong>. 
+        Ahora puedes conectarle almacenamiento (Google Drive), código (GitHub) o datos (PostgreSQL), ¡y la IA aprende a utilizarlos de forma inmediata y segura mediante un único protocolo estándar!
+      </p>
+
+      <!-- SVG MCP -->
+      <div class="svg-scene">
+        <svg width="600" height="170" viewBox="0 0 600 170">
+          <!-- Cerebro IA -->
+          <rect x="40" y="40" width="130" height="90" rx="16" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="3" />
+          <text x="105" y="75" text-anchor="middle" font-size="28">🧠🤖</text>
+          <text x="105" y="105" text-anchor="middle" font-weight="bold" fill="#6D28D9" font-size="13">Cerebro IA</text>
+          <text x="105" y="120" text-anchor="middle" fill="#64748B" font-size="10">(Claude, Gemini, etc.)</text>
+
+          <!-- Enchufe Central MCP -->
+          <rect x="230" y="55" width="140" height="60" rx="12" fill="#8B5CF6" />
+          <circle cx="250" cy="85" r="8" fill="white" />
+          <circle cx="280" cy="85" r="8" fill="white" />
+          <circle cx="310" cy="85" r="8" fill="white" />
+          <text x="300" y="45" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">ENCHUFE MCP 🔌</text>
+          <text x="300" y="132" text-anchor="middle" font-size="11" fill="#64748B">Conector Universal</text>
+
+          <!-- Cable IA -> MCP -->
+          <line x1="170" y1="85" x2="230" y2="85" stroke="#8B5CF6" stroke-width="5" />
+
+          <!-- Herramientas a conectar -->
+          <g transform="translate(420, 20)">
+            <rect x="0" y="0" width="140" height="34" rx="8" fill="#FEE2E2" stroke="#EF4444" stroke-width="2" />
+            <text x="70" y="22" text-anchor="middle" font-size="11" font-weight="bold" fill="#991B1B">📁 Archivos de tu PC</text>
+            <line x1="-50" y1="50" x2="0" y2="17" stroke="#EF4444" stroke-width="2" stroke-dasharray="4,3" />
+
+            <rect x="0" y="48" width="140" height="34" rx="8" fill="#E0E7FF" stroke="#4F46E5" stroke-width="2" />
+            <text x="70" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#3730A3">🐙 GitHub / Código</text>
+            <line x1="-50" y1="65" x2="0" y2="65" stroke="#4F46E5" stroke-width="2" stroke-dasharray="4,3" />
+
+            <rect x="0" y="96" width="140" height="34" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="2" />
+            <text x="70" y="118" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">🗄️ Base de Datos</text>
+            <line x1="-50" y1="80" x2="0" y2="113" stroke="#16A34A" stroke-width="2" stroke-dasharray="4,3" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Simulador MCP -->
+      <div class="simulator-box">
+        <div class="sim-header">
+          <span>🎒 Laboratorio MCP: ¡Enchufa una superherramienta al robot!</span>
+        </div>
+        <p style="font-size: 0.95rem; margin-bottom: 12px;">Haz clic en un accesorio para enchufarlo en el conector MCP del robot:</p>
+
+        <div class="tool-slots">
+          <button class="tool-btn" onclick="plugMcp('files')">📂 Enchufar Servidor de Archivos</button>
+          <button class="tool-btn" onclick="plugMcp('github')">🐙 Enchufar Servidor de GitHub</button>
+          <button class="tool-btn" onclick="plugMcp('database')">🗃️ Enchufar Servidor Postgres</button>
+          <button class="tool-btn" onclick="plugMcp('gcalendar')">📅 Enchufar Google Calendar</button>
+        </div>
+
+        <div class="robot-backpack" id="backpackStatus" style="margin-top: 15px;">
+          (El robot está esperando que le enchufes una herramienta por MCP...)
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 4: COMPARACIÓN / RESUMEN -->
+    <div class="card" id="sec-summary">
+      <h2>📊 Cuadro Resumen: ¿En qué se diferencian?</h2>
+      <p>Mira esta tablita para recordarlo para siempre con una sola mirada:</p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>La Analogía Clave</th>
+            <th>¿Quién lo usa?</th>
+            <th>¿Para qué sirve?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>⌨️ CLI</strong></td>
+            <td>El <strong>Walkie-Talkie</strong> de órdenes directas</td>
+            <td>Tú escribiendo en la pantalla negra</td>
+            <td>Darle instrucciones rápidas y automáticas al ordenador</td>
+          </tr>
+          <tr>
+            <td><strong>🍽️ API</strong></td>
+            <td>El <strong>Camarero</strong> del restaurante</td>
+            <td>Aplicación A hablando con Aplicación B</td>
+            <td>Pedir datos a un servidor y recibir la respuesta</td>
+          </tr>
+          <tr>
+            <td><strong>🔌 MCP</strong></td>
+            <td>El <strong>Puerto USB Universal</strong> de la IA</td>
+            <td>Modelos de IA (LLMs) conectándose a tus datos</td>
+            <td>Permitir a la IA usar herramientas externas sin reinventar la rueda</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN 5: MINI QUIZ -->
+    <div class="card quiz-card" id="sec-quiz">
+      <h2>⭐ Mini Quiz de Repaso</h2>
+      <p>Comprueba lo aprendido respondiendo a esta pregunta:</p>
+      
+      <p style="margin-top: 12px; font-weight: bold; font-size: 1.1rem;">
+        Si un modelo de Inteligencia Artificial necesita consultar documentos locales de forma segura y estandarizada, ¿qué tecnología utilizará?
+      </p>
+
+      <div class="quiz-options">
+        <button class="q-btn" onclick="answerQuiz(1)">A) Un cable de antena analógico 📺</button>
+        <button class="q-btn" onclick="answerQuiz(2)">B) Un servidor MCP con protocolo universal 🔌✨</button>
+        <button class="q-btn" onclick="answerQuiz(3)">C) Escribir comandos manuales en un bloc de notas 📝</button>
+      </div>
+
+      <div class="quiz-feedback" id="quizResult"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      Creado con didáctica y claridad conceptual · Proyecto 1
+    </footer>
+
+  </div>
+
+  <script>
+    // Smooth Scroll
+    function scrollToId(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // CLI Simulator
+    function runCliCmd(action) {
+      const out = document.getElementById('cliOutput');
+      if (action === 'crear_galleta') {
+        out.innerText = "$ robot --hacer-galleta\n[PROCESANDO] Horneando galleta con chispas de chocolate...\n[EXITO 100%] 🍪 ¡Galleta recién salida del horno entregada!";
+      } else if (action === 'bailar') {
+        out.innerText = "$ robot --bailar-trompo\n[MOTOR ON] Girando brazos a 300 RPM...\n[DIVERSIÓN] 🕺💃 ¡El robot está bailando breakdance!";
+      } else if (action === 'dormir') {
+        out.innerText = "$ robot --modo-siesta\n[STANDBY] Apagando luces de los ojos...\n[Zzz...] 😴 El robot está recargando su batería para jugar mañana.";
+      }
+    }
+
+    function clearCli() {
+      document.getElementById('cliOutput').innerText = "$ terminal_limpia\nEsperando tu siguiente comando...";
+    }
+
+    // API Simulator
+    function callApi(requestType) {
+      const status = document.getElementById('apiStatus');
+      status.innerHTML = "<em>🤵 El camarero va corriendo a la cocina con tu pedido... 🏃💨</em>";
+      
+      setTimeout(() => {
+        if (requestType === 'clima') {
+          status.innerHTML = "<strong>🍽️ El camarero regresa:</strong> '¡Aquí tiene la respuesta del servidor del Clima! Hoy hace <strong>24°C y un sol brillante ☀️</strong>'.";
+        } else if (requestType === 'fotos') {
+          status.innerHTML = "<strong>🍽️ El camarero regresa:</strong> '¡Aquí tiene el paquete de datos! <strong>3 fotos de perritos jugando en el parque 🐶🐾</strong>'.";
+        } else if (requestType === 'mapa') {
+          status.innerHTML = "<strong>🍽️ El camarero regresa:</strong> '¡El servidor de mapas responde! Gira dos calles a la derecha para llegar al museo 🏛️'.";
+        }
+      }, 700);
+    }
+
+    // MCP Simulator
+    function plugMcp(server) {
+      const backpack = document.getElementById('backpackStatus');
+      if (server === 'files') {
+        backpack.innerHTML = "🔌 <strong>¡Servidor MCP de Archivos conectado!</strong><br>🤖 Robot IA: <em>'¡Ahora puedo leer los cuentos que tienes guardados en tu carpeta Mis Documentos!'</em> 📚";
+      } else if (server === 'github') {
+        backpack.innerHTML = "🔌 <strong>¡Servidor MCP de GitHub conectado!</strong><br>🤖 Robot IA: <em>'¡Ahora puedo ayudarte a ver el código de tus proyectos y crear ramas como un profesional!'</em> 🐙💻";
+      } else if (server === 'database') {
+        backpack.innerHTML = "🔌 <strong>¡Servidor MCP de Base de Datos conectado!</strong><br>🤖 Robot IA: <em>'¡Ahora puedo buscar en el baúl gigante cuántos usuarios nuevos se registraron hoy!'</em> 🗄️📊";
+      } else if (server === 'gcalendar') {
+        backpack.innerHTML = "🔌 <strong>¡Servidor MCP de Google Calendar conectado!</strong><br>🤖 Robot IA: <em>'¡Veo que mañana tienes una fiesta de cumpleaños a las 5:00 PM!'</em> 🎈📅";
+      }
+    }
+
+    // Quiz
+    function answerQuiz(option) {
+      const res = document.getElementById('quizResult');
+      if (option === 2) {
+        res.innerHTML = "<span style='color: #15803D;'>🎉 ¡EXCELENTE! ¡Has acertado! El MCP es exactamente el conector universal que las IAs usan para acceder a herramientas y datos. 🌟🏆</span>";
+      } else {
+        res.innerHTML = "<span style='color: #DC2626;'>😅 ¡Ups, no es esa! Recuerda que el robot necesita un conector universal (MCP) para enchufarse a tus datos. ¡Inténtalo de nuevo!</span>";
+      }
+    }
+  </script>
+</body>
+</html>
+
